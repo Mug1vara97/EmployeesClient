@@ -10,7 +10,6 @@ import {
   User,
   File,
   Eye,
-  Settings,
   FileImage,
   FileSpreadsheet,
   FileType
@@ -20,7 +19,6 @@ import { useNotification } from '../hooks/useNotification';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmDialog from '../components/ConfirmDialog';
 import Notification from '../components/Notification';
-import DocumentTypesManager from '../components/DocumentTypesManager';
 import DocumentUploadModal from '../components/DocumentUploadModal';
 import DocumentPreview from '../components/DocumentPreview';
 
@@ -31,9 +29,7 @@ const DocumentsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState('');
-  const [selectedDocumentType, setSelectedDocumentType] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, document: null });
-  const [documentTypesModal, setDocumentTypesModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [previewModal, setPreviewModal] = useState({ isOpen: false, document: null });
   
@@ -41,13 +37,13 @@ const DocumentsPage = () => {
 
   useEffect(() => {
     loadData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); 
 
   useEffect(() => {
     if (employees.length > 0) {
       loadAllDocuments();
     }
-  }, [employees]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [employees]); 
 
   const loadData = async () => {
     try {
@@ -177,10 +173,8 @@ const DocumentsPage = () => {
       doc.employee.middleName?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesEmployee = !selectedEmployee || doc.employee.id.toString() === selectedEmployee.toString();
-    const matchesType = !selectedDocumentType || doc.documentType.id.toString() === selectedDocumentType.toString();
     
-    
-    return matchesSearch && matchesEmployee && matchesType;
+    return matchesSearch && matchesEmployee;
   });
 
   if (loading) {
@@ -201,13 +195,6 @@ const DocumentsPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setDocumentTypesModal(true)}
-            className="btn-secondary flex items-center gap-x-2"
-          >
-            <Settings className="h-4 w-4" />
-            Типы документов
-          </button>
           <button
             onClick={() => setShowUploadModal(true)}
             className="btn-primary flex items-center gap-x-2"
@@ -243,18 +230,6 @@ const DocumentsPage = () => {
           ))}
         </select>
 
-        <select
-          value={selectedDocumentType}
-          onChange={(e) => setSelectedDocumentType(e.target.value)}
-          className="input-field min-w-[200px]"
-        >
-          <option value="">Все типы документов</option>
-          {documentTypes.map((type) => (
-            <option key={type.id} value={type.id}>
-              {type.typeName}
-            </option>
-          ))}
-        </select>
       </div>
 
       <div className="card">
@@ -270,7 +245,7 @@ const DocumentsPage = () => {
               </div>
               <h3 className="mt-2 text-sm font-medium text-gray-900">Нет документов</h3>
               <p className="mt-1 text-sm text-gray-500">
-                {searchTerm || selectedEmployee || selectedDocumentType 
+                {searchTerm || selectedEmployee 
                   ? 'Попробуйте изменить фильтры поиска' 
                   : 'Документы появятся здесь после загрузки'}
               </p>
@@ -352,16 +327,11 @@ const DocumentsPage = () => {
         type="danger"
       />
 
-      <DocumentTypesManager
-        isOpen={documentTypesModal}
-        onClose={() => setDocumentTypesModal(false)}
-      />
 
       <DocumentUploadModal
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
         employees={employees}
-        documentTypes={documentTypes}
         onSuccess={handleUploadSuccess}
       />
 

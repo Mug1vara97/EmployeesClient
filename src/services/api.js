@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5147/api';
+const API_BASE_URL = 'http://localhost:5055/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -41,42 +41,98 @@ api.interceptors.response.use(
   }
 );
 
+const adaptEmployeeFromAPI = (apiEmployee) => ({
+  id: apiEmployee.id,
+  firstName: apiEmployee.firstName,
+  lastName: apiEmployee.lastName,
+  middleName: apiEmployee.patronymic,
+  username: apiEmployee.username,
+  dateOfBirth: apiEmployee.birthday
+});
+
+const adaptEmployeeToAPI = (employee) => ({
+  username: employee.username || '',
+  firstName: employee.firstName,
+  lastName: employee.lastName,
+  patronymic: employee.middleName || '',
+  birthday: employee.dateOfBirth
+});
+
 export const employeesAPI = {
-  getAll: () => api.get('/employees'),
+  getAll: () => api.get('/employees').then(response => ({
+    data: response.data.map(adaptEmployeeFromAPI)
+  })),
   
-  create: (data) => api.post('/employees', data),
+  getById: (id) => api.get(`/employees/${id}`).then(response => ({
+    data: {
+      ...adaptEmployeeFromAPI(response.data),
+      files: response.data.files || []
+    }
+  })),
   
-  update: (id, data) => api.put(`/employees/${id}`, data),
+  create: (data) => api.post('/employees', adaptEmployeeToAPI(data)).then(response => ({
+    data: adaptEmployeeFromAPI(response.data)
+  })),
+  
+  update: (id, data) => api.put(`/employees/${id}`, adaptEmployeeToAPI(data)).then(response => ({
+    data: adaptEmployeeFromAPI(response.data)
+  })),
   
   delete: (id) => api.delete(`/employees/${id}`),
-  
-  search: (query) => api.get(`/employees/search?q=${encodeURIComponent(query)}`),
 };
 
 export const documentTypesAPI = {
-  getAll: () => api.get('/documenttypes'),
+  getAll: () => Promise.resolve({ data: [
+    { id: 1, typeName: 'Паспорт' },
+    { id: 2, typeName: 'Трудовая книжка' },
+    { id: 3, typeName: 'Диплом' },
+    { id: 4, typeName: 'Справка' },
+    { id: 5, typeName: 'Другое' }
+  ]}),
   
-  create: (data) => api.post('/documenttypes', data),
+  create: (data) => Promise.resolve({ data: { id: Date.now(), ...data } }),
   
-  update: (id, data) => api.put(`/documenttypes/${id}`, data),
+  update: (id, data) => Promise.resolve({ data: { id, ...data } }),
   
-  delete: (id) => api.delete(`/documenttypes/${id}`),
+  delete: (id) => Promise.resolve({ data: { id } }),
 };
 
+const adaptFileFromAPI = (apiFile, employee) => ({
+  id: apiFile.id,
+  documentName: apiFile.path.split('/').pop() || 'Файл',
+  fileSize: 0,
+  mimeType: 'application/octet-stream',
+  createdAt: apiFile.created,
+  employee: employee,
+  documentType: { id: 1, typeName: 'Документ' }
+});
+
 export const employeeDocumentsAPI = {
-  getByEmployee: (employeeId) => api.get(`/employeedocuments/employee/${employeeId}`),
+  getByEmployee: (employeeId) => api.get(`/employees/${employeeId}`).then(response => {
+    const employee = adaptEmployeeFromAPI(response.data);
+    const files = (response.data.files || []).map(file => adaptFileFromAPI(file, employee));
+    return { data: files };
+  }),
   
-  download: (documentId) => api.get(`/employeedocuments/${documentId}`, {
+  download: (fileId) => api.get(`/employees/files/${fileId}`, {
     responseType: 'blob'
   }),
   
-  upload: (formData) => api.post('/employeedocuments', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+  preview: (fileId) => api.get(`/employees/files/${fileId}/preview`, {
+    responseType: 'blob'
   }),
   
-  delete: (documentId) => api.delete(`/employeedocuments/${documentId}`),
+  upload: (employeeId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/employees/${employeeId}/link-file`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  
+  delete: (fileId) => api.delete(`/employees/files/${fileId}`),
 };
 
 export default api;

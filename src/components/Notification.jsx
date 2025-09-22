@@ -8,7 +8,7 @@ const Notification = ({ message, type = 'success', duration = 3000, onClose }) =
     if (duration > 0) {
       const timer = setTimeout(() => {
         setIsVisible(false);
-        setTimeout(onClose, 300); // Wait for animation to complete
+        setTimeout(onClose, 300);
       }, duration);
 
       return () => clearTimeout(timer);

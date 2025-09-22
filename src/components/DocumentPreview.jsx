@@ -34,14 +34,15 @@ const DocumentPreview = ({ document, isOpen, onClose }) => {
       setLoading(true);
       setError(null);
       
-      const response = await employeeDocumentsAPI.download(document.id);
-      const blob = new Blob([response.data], { type: document.mimeType });
+      const response = await employeeDocumentsAPI.preview(document.id);
+      const contentType = response.headers['content-type'] || document.mimeType || 'application/octet-stream';
+      const blob = new Blob([response.data], { type: contentType });
       const url = URL.createObjectURL(blob);
       
       setPreviewData({
         url,
         blob,
-        type: document.mimeType
+        type: contentType
       });
     } catch (error) {
       console.error('Ошибка загрузки документа для предварительного просмотра:', error);
@@ -52,14 +53,23 @@ const DocumentPreview = ({ document, isOpen, onClose }) => {
     }
   };
 
-  const handleDownload = () => {
-    if (previewData) {
+  const handleDownload = async () => {
+    try {
+      const response = await employeeDocumentsAPI.download(document.id);
+      const blob = new Blob([response.data], { type: document.mimeType });
+      const url = URL.createObjectURL(blob);
+      
       const link = document.createElement('a');
-      link.href = previewData.url;
+      link.href = url;
       link.download = document.documentName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Ошибка скачивания документа:', error);
+      showError('Ошибка скачивания документа');
     }
   };
 
@@ -81,17 +91,20 @@ const DocumentPreview = ({ document, isOpen, onClose }) => {
   };
 
   const isImage = () => {
-    return document && document.mimeType && document.mimeType.startsWith('image/');
+    const mimeType = previewData?.type || document?.mimeType;
+    return mimeType && mimeType.startsWith('image/');
   };
 
   const isPDF = () => {
-    return document && document.mimeType && document.mimeType === 'application/pdf';
+    const mimeType = previewData?.type || document?.mimeType;
+    return mimeType && mimeType === 'application/pdf';
   };
 
   const isText = () => {
-    return document && document.mimeType && (
-      document.mimeType.startsWith('text/') || 
-      document.mimeType === 'application/json' ||
+    const mimeType = previewData?.type || document?.mimeType;
+    return mimeType && (
+      mimeType.startsWith('text/') || 
+      mimeType === 'application/json' ||
       document.documentName.endsWith('.txt') ||
       document.documentName.endsWith('.json')
     );

@@ -4,11 +4,10 @@ import {
   Search, 
   Edit, 
   Trash2, 
-  Phone,
-  Mail,
   Calendar,
   Users,
-  Upload
+  Upload,
+  User
 } from 'lucide-react';
 import EmployeeForm from '../components/EmployeeForm';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -20,6 +19,7 @@ import { employeesAPI } from '../services/api';
 
 const EmployeesPage = () => {
   const [employees, setEmployees] = useState([]);
+  const [allEmployees, setAllEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -32,45 +32,34 @@ const EmployeesPage = () => {
 
   useEffect(() => {
     loadEmployees();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); 
 
   const loadEmployees = async () => {
     try {
       setLoading(true);
       const response = await employeesAPI.getAll();
       setEmployees(response.data);
+      setAllEmployees(response.data);
     } catch (error) {
       console.error('Ошибка загрузки сотрудников:', error);
       showError('Ошибка загрузки сотрудников');
-      setEmployees([
-        {
-          id: 1,
-          firstName: 'Иван',
-          lastName: 'Иванов',
-          middleName: 'Иванович',
-          email: 'ivan.ivanov@example.com',
-          phone: '+7 (999) 123-45-67',
-          dateOfBirth: '2000-09-05',
-          createdAt: '2024-01-15'
-        }
-      ]);
     } finally {
       setLoading(false);
     }
   };
 
 
-  const handleSearch = async (query) => {
+  const handleSearch = (query) => {
     if (query.trim()) {
-      try {
-        const response = await employeesAPI.search(query);
-        setEmployees(response.data);
-      } catch (error) {
-        console.error('Ошибка поиска:', error);
-        showError('Ошибка поиска сотрудников');
-      }
+      const filtered = allEmployees.filter(employee => 
+        employee.firstName.toLowerCase().includes(query.toLowerCase()) ||
+        employee.lastName.toLowerCase().includes(query.toLowerCase()) ||
+        employee.middleName?.toLowerCase().includes(query.toLowerCase()) ||
+        employee.username.toLowerCase().includes(query.toLowerCase())
+      );
+      setEmployees(filtered);
     } else {
-      loadEmployees();
+      setEmployees(allEmployees);
     }
   };
 
@@ -159,7 +148,7 @@ const EmployeesPage = () => {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Поиск по имени или email..."
+            placeholder="Поиск по имени или имени пользователя..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -204,16 +193,10 @@ const EmployeesPage = () => {
                         {employee.lastName} {employee.firstName} {employee.middleName || ''}
                       </p>
                       <div className="flex items-center space-x-4 mt-1">
-                        {employee.email && (
+                        {employee.username && (
                           <div className="flex items-center text-sm text-gray-500">
-                            <Mail className="h-4 w-4 mr-1" />
-                            {employee.email}
-                          </div>
-                        )}
-                        {employee.phone && (
-                          <div className="flex items-center text-sm text-gray-500">
-                            <Phone className="h-4 w-4 mr-1" />
-                            {employee.phone}
+                            <User className="h-4 w-4 mr-1" />
+                            {employee.username}
                           </div>
                         )}
                         {employee.dateOfBirth && (

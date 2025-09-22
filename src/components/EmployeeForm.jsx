@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, User, Mail, Phone, Calendar } from 'lucide-react';
+import { X, User, Calendar } from 'lucide-react';
 import LoadingSpinner from './LoadingSpinner';
 
 const EmployeeForm = ({ isOpen, onClose, employee = null, onSave, loading = false }) => {
@@ -7,8 +7,7 @@ const EmployeeForm = ({ isOpen, onClose, employee = null, onSave, loading = fals
     firstName: '',
     lastName: '',
     middleName: '',
-    email: '',
-    phone: '',
+    username: '',
     dateOfBirth: '',
   });
 
@@ -20,8 +19,7 @@ const EmployeeForm = ({ isOpen, onClose, employee = null, onSave, loading = fals
         firstName: employee.firstName || '',
         lastName: employee.lastName || '',
         middleName: employee.middleName || '',
-        email: employee.email || '',
-        phone: employee.phone || '',
+        username: employee.username || '',
         dateOfBirth: employee.dateOfBirth ? 
           (employee.dateOfBirth.includes('T') ? employee.dateOfBirth.split('T')[0] : employee.dateOfBirth) : '',
       });
@@ -30,8 +28,7 @@ const EmployeeForm = ({ isOpen, onClose, employee = null, onSave, loading = fals
         firstName: '',
         lastName: '',
         middleName: '',
-        email: '',
-        phone: '',
+        username: '',
         dateOfBirth: '',
       });
     }
@@ -64,13 +61,10 @@ const EmployeeForm = ({ isOpen, onClose, employee = null, onSave, loading = fals
       newErrors.lastName = 'Фамилия обязательна';
     }
 
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Некорректный email';
+    if (!formData.username.trim()) {
+      newErrors.username = 'Имя пользователя обязательно';
     }
 
-    if (formData.phone && !/^[+]?[0-9\s\-()]{10,}$/.test(formData.phone)) {
-      newErrors.phone = 'Некорректный номер телефона';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -83,8 +77,7 @@ const EmployeeForm = ({ isOpen, onClose, employee = null, onSave, loading = fals
       const cleanedData = {
         ...formData,
         middleName: formData.middleName.trim() || null,
-        email: formData.email.trim() || null,
-        phone: formData.phone.trim() || null,
+        username: formData.username.trim(),
         dateOfBirth: formData.dateOfBirth || null,
       };
       
@@ -177,46 +170,26 @@ const EmployeeForm = ({ isOpen, onClose, employee = null, onSave, loading = fals
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Email
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                    Имя пользователя *
                   </label>
                   <div className="mt-1 relative">
-                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
-                      type="email"
-                      name="email"
-                      id="email"
-                      value={formData.email}
+                      type="text"
+                      name="username"
+                      id="username"
+                      value={formData.username}
                       onChange={handleChange}
-                      className={`input-field pl-10 ${errors.email ? 'border-red-300 focus:ring-red-500' : ''}`}
-                      placeholder="example@email.com"
+                      className={`input-field pl-10 ${errors.username ? 'border-red-300 focus:ring-red-500' : ''}`}
+                      placeholder="Введите имя пользователя"
                     />
                   </div>
-                  {errors.email && (
-                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                  {errors.username && (
+                    <p className="mt-1 text-sm text-red-600">{errors.username}</p>
                   )}
                 </div>
 
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                    Телефон
-                  </label>
-                  <div className="mt-1 relative">
-                    <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="tel"
-                      name="phone"
-                      id="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className={`input-field pl-10 ${errors.phone ? 'border-red-300 focus:ring-red-500' : ''}`}
-                      placeholder="+7 (999) 123-45-67"
-                    />
-                  </div>
-                  {errors.phone && (
-                    <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-                  )}
-                </div>
 
                 <div>
                   <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">

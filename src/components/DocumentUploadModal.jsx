@@ -4,11 +4,9 @@ import { employeeDocumentsAPI } from '../services/api';
 import { useNotification } from '../hooks/useNotification';
 import LoadingSpinner from './LoadingSpinner';
 
-const DocumentUploadModal = ({ isOpen, onClose, employees, documentTypes, onSuccess }) => {
+const DocumentUploadModal = ({ isOpen, onClose, employees, onSuccess }) => {
   const [formData, setFormData] = useState({
     employeeId: '',
-    documentTypeId: '',
-    documentName: '',
     file: null
   });
   const [loading, setLoading] = useState(false);
@@ -21,8 +19,6 @@ const DocumentUploadModal = ({ isOpen, onClose, employees, documentTypes, onSucc
     if (isOpen) {
       setFormData({
         employeeId: '',
-        documentTypeId: '',
-        documentName: '',
         file: null
       });
       setErrors({});
@@ -33,8 +29,7 @@ const DocumentUploadModal = ({ isOpen, onClose, employees, documentTypes, onSucc
     if (file) {
       setFormData(prev => ({
         ...prev,
-        file: file,
-        documentName: prev.documentName || file.name
+        file: file
       }));
       
       if (errors.file) {
@@ -82,17 +77,11 @@ const DocumentUploadModal = ({ isOpen, onClose, employees, documentTypes, onSucc
       newErrors.employeeId = 'Выберите сотрудника';
     }
 
-    if (!formData.documentTypeId) {
-      newErrors.documentTypeId = 'Выберите тип документа';
-    }
 
     if (!formData.file) {
       newErrors.file = 'Выберите файл';
     }
 
-    if (!formData.documentName.trim()) {
-      newErrors.documentName = 'Введите название документа';
-    }
 
     if (formData.file && formData.file.size > 10 * 1024 * 1024) {
       newErrors.file = 'Размер файла не должен превышать 10MB';
@@ -110,13 +99,7 @@ const DocumentUploadModal = ({ isOpen, onClose, employees, documentTypes, onSucc
     try {
       setLoading(true);
       
-      const uploadData = new FormData();
-      uploadData.append('employeeId', formData.employeeId);
-      uploadData.append('documentTypeId', formData.documentTypeId);
-      uploadData.append('documentName', formData.documentName);
-      uploadData.append('file', formData.file);
-
-      await employeeDocumentsAPI.upload(uploadData);
+      await employeeDocumentsAPI.upload(formData.employeeId, formData.file);
       showSuccess('Документ успешно загружен');
       onSuccess();
       onClose();
@@ -187,49 +170,7 @@ const DocumentUploadModal = ({ isOpen, onClose, employees, documentTypes, onSucc
                   )}
                 </div>
 
-                <div>
-                  <label htmlFor="documentTypeId" className="block text-sm font-medium text-gray-700">
-                    Тип документа *
-                  </label>
-                  <div className="mt-1 relative">
-                    <FileText className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                    <select
-                      name="documentTypeId"
-                      id="documentTypeId"
-                      value={formData.documentTypeId}
-                      onChange={handleInputChange}
-                      className={`input-field pl-10 ${errors.documentTypeId ? 'border-red-300 focus:ring-red-500' : ''}`}
-                    >
-                      <option value="">Выберите тип документа</option>
-                      {documentTypes.map((type) => (
-                        <option key={type.id} value={type.id}>
-                          {type.typeName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {errors.documentTypeId && (
-                    <p className="mt-1 text-sm text-red-600">{errors.documentTypeId}</p>
-                  )}
-                </div>
 
-                <div>
-                  <label htmlFor="documentName" className="block text-sm font-medium text-gray-700">
-                    Название документа *
-                  </label>
-                  <input
-                    type="text"
-                    name="documentName"
-                    id="documentName"
-                    value={formData.documentName}
-                    onChange={handleInputChange}
-                    className={`input-field ${errors.documentName ? 'border-red-300 focus:ring-red-500' : ''}`}
-                    placeholder="Введите название документа"
-                  />
-                  {errors.documentName && (
-                    <p className="mt-1 text-sm text-red-600">{errors.documentName}</p>
-                  )}
-                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

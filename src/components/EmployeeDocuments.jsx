@@ -13,7 +13,7 @@ import {
   FileSpreadsheet,
   FileType
 } from 'lucide-react';
-import { employeeDocumentsAPI, documentTypesAPI } from '../services/api';
+import { employeeDocumentsAPI } from '../services/api';
 import { useNotification } from '../hooks/useNotification';
 import LoadingSpinner from './LoadingSpinner';
 import ConfirmDialog from './ConfirmDialog';
@@ -21,7 +21,6 @@ import DocumentPreview from './DocumentPreview';
 
 const EmployeeDocuments = ({ employee, isOpen, onClose }) => {
   const [documents, setDocuments] = useState([]);
-  const [documentTypes, setDocumentTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, document: null });
@@ -32,7 +31,6 @@ const EmployeeDocuments = ({ employee, isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen && employee) {
       loadDocuments();
-      loadDocumentTypes();
     }
   }, [isOpen, employee]);
 
@@ -49,15 +47,6 @@ const EmployeeDocuments = ({ employee, isOpen, onClose }) => {
     }
   };
 
-  const loadDocumentTypes = async () => {
-    try {
-      const response = await documentTypesAPI.getAll();
-      setDocumentTypes(response.data);
-    } catch (error) {
-      console.error('Ошибка загрузки типов документов:', error);
-      showError('Ошибка загрузки типов документов');
-    }
-  };
 
   const handleDownload = async (doc) => {
     try {
@@ -243,7 +232,6 @@ const EmployeeDocuments = ({ employee, isOpen, onClose }) => {
       {showUploadModal && (
         <DocumentUploadModal
           employee={employee}
-          documentTypes={documentTypes}
           isOpen={showUploadModal}
           onClose={() => setShowUploadModal(false)}
           onSuccess={() => {
@@ -273,10 +261,8 @@ const EmployeeDocuments = ({ employee, isOpen, onClose }) => {
   );
 };
 
-const DocumentUploadModal = ({ employee, documentTypes, isOpen, onClose, onSuccess }) => {
+const DocumentUploadModal = ({ employee, isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    documentTypeId: '',
-    documentName: '',
     file: null
   });
   const [loading, setLoading] = useState(false);
@@ -289,8 +275,7 @@ const DocumentUploadModal = ({ employee, documentTypes, isOpen, onClose, onSucce
     if (file) {
       setFormData(prev => ({
         ...prev,
-        file: file,
-        documentName: prev.documentName || file.name
+        file: file
       }));
       
       if (errors.file) {
@@ -314,16 +299,8 @@ const DocumentUploadModal = ({ employee, documentTypes, isOpen, onClose, onSucce
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.documentTypeId) {
-      newErrors.documentTypeId = 'Выберите тип документа';
-    }
-
     if (!formData.file) {
       newErrors.file = 'Выберите файл';
-    }
-
-    if (!formData.documentName.trim()) {
-      newErrors.documentName = 'Введите название документа';
     }
 
     setErrors(newErrors);
@@ -338,19 +315,11 @@ const DocumentUploadModal = ({ employee, documentTypes, isOpen, onClose, onSucce
     try {
       setLoading(true);
       
-      const uploadData = new FormData();
-      uploadData.append('employeeId', employee.id);
-      uploadData.append('documentTypeId', formData.documentTypeId);
-      uploadData.append('documentName', formData.documentName);
-      uploadData.append('file', formData.file);
-
-      await employeeDocumentsAPI.upload(uploadData);
+      await employeeDocumentsAPI.upload(employee.id, formData.file);
       showSuccess('Документ успешно загружен');
       onSuccess();
       
       setFormData({
-        documentTypeId: '',
-        documentName: '',
         file: null
       });
     } catch (error) {
@@ -385,46 +354,7 @@ const DocumentUploadModal = ({ employee, documentTypes, isOpen, onClose, onSucce
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="documentTypeId" className="block text-sm font-medium text-gray-700">
-                    Тип документа *
-                  </label>
-                  <select
-                    name="documentTypeId"
-                    id="documentTypeId"
-                    value={formData.documentTypeId}
-                    onChange={handleChange}
-                    className={`input-field ${errors.documentTypeId ? 'border-red-300 focus:ring-red-500' : ''}`}
-                  >
-                    <option value="">Выберите тип документа</option>
-                    {documentTypes.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.typeName}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.documentTypeId && (
-                    <p className="mt-1 text-sm text-red-600">{errors.documentTypeId}</p>
-                  )}
-                </div>
 
-                <div>
-                  <label htmlFor="documentName" className="block text-sm font-medium text-gray-700">
-                    Название документа *
-                  </label>
-                  <input
-                    type="text"
-                    name="documentName"
-                    id="documentName"
-                    value={formData.documentName}
-                    onChange={handleChange}
-                    className={`input-field ${errors.documentName ? 'border-red-300 focus:ring-red-500' : ''}`}
-                    placeholder="Введите название документа"
-                  />
-                  {errors.documentName && (
-                    <p className="mt-1 text-sm text-red-600">{errors.documentName}</p>
-                  )}
-                </div>
 
                 <div>
                   <label htmlFor="file" className="block text-sm font-medium text-gray-700">
