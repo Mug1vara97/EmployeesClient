@@ -32,7 +32,7 @@ const EmployeesPage = () => {
 
   useEffect(() => {
     loadEmployees();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadEmployees = async () => {
     try {
