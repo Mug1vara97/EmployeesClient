@@ -305,4 +305,3 @@ const QuickDocumentUpload = ({ employee, isOpen, onClose, onSuccess }) => {
 };
 
 export default QuickDocumentUpload;
-

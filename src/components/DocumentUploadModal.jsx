@@ -321,4 +321,3 @@ const DocumentUploadModal = ({ isOpen, onClose, employees, documentTypes, onSucc
 };
 
 export default DocumentUploadModal;
-
