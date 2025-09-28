@@ -1,6 +1,6 @@
 import Navigation from './Navigation';
 
-const Layout = ({ children, activeTab, onTabChange, pageTitle }) => {
+const Layout = ({ children, activeTab, onTabChange, pageTitle, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -15,6 +15,16 @@ const Layout = ({ children, activeTab, onTabChange, pageTitle }) => {
               {pageTitle}
             </h1>
           </div>
+          {onLogout && (
+            <div className="flex items-center">
+              <button
+                onClick={onLogout}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Выйти
+              </button>
+            </div>
+          )}
         </div>
 
         <main className="py-6">
